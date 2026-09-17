@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador Key - Carloszin Mods</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}
+        body{background:#0f1f0f;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+        .caixa{background:#1a331a;padding:35px 25px;border-radius:16px;box-shadow:0 0 30px #0f0;max-width:400px;width:100%}
+        h1{color:#0f0;text-align:center;margin-bottom:25px;font-size:20px}
+        .area-key{background:#000;border:2px solid #0f0;padding:15px;border-radius:10px;margin:20px 0;color:#0f0;font-size:16px;word-break:break-all;text-align:center;min-height:60px;display:flex;align-items:center;justify-content:center}
+        .botao{width:100%;padding:14px;background:#0f0;color:#000;border:none;border-radius:10px;font-size:17px;font-weight:bold;cursor:pointer;margin:8px 0;transition:0.3s}
+        .botao:hover{background:#0c0}
+        .aviso{color:#6f6;text-align:center;margin-top:15px;font-size:14px}
+        .reiniciando{color:#ff0;text-align:center;margin-top:10px;display:none}
+    </style>
+</head>
+<body>
+    <div class="caixa" id="telaInicial">
+        <h1>GERADOR DE KEY<br>CARLOSZIN MODS</h1>
+        <button class="botao" onclick="gerarKey()">Gerar Minha Key</button>
+        <p class="aviso">1 key por dia • Válida 24h</p>
+    </div>
+
+    <div class="caixa" id="telaGerada" style="display:none">
+        <h1>✅ KEY GERADA</h1>
+        <div class="area-key" id="mostrarKey"></div>
+        <button class="botao" onclick="copiarKey()">Copiar Key</button>
+        <p class="aviso" id="tempoVenc"></p>
+        <p class="reiniciando" id="contadorReinicio">Reiniciando em 10s...</p>
+    </div>
+
+    <script>
+        const CHAVE_SITE = "carloszin2026"; // NÃO MUDAR ISSO
+
+        function gerarKey(){
+            // Pegar identificador do usuário
+            let idUser = localStorage.getItem("idUser");
+            if(!idUser){
+                idUser = Math.random().toString(36).substring(2, 10).toUpperCase();
+                localStorage.setItem("idUser", idUser);
+            }
+
+            // Verificar se já gerou hoje
+            let ultimaData = localStorage.getItem("ultimaGeracao");
+            let hoje = new Date().toDateString();
+            
+            if(ultimaData === hoje){
+                alert("⚠️ Você já gerou hoje!\nVolte amanhã para gerar uma nova.");
+                return;
+            }
+
+            // Gerar a Key
+            let agora = new Date();
+            let expira = new Date(agora.getTime() + 24*60*60*1000);
+            let dataExp = expira.toLocaleDateString('pt-BR');
+            let horaExp = expira.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+
+            // Montar Key
+            let keyBruta = idUser + "|" + expira.getTime() + "|" + CHAVE_SITE;
+            let keyFinal = btoa(keyBruta); // Codificar
+
+            // Mostrar
+            document.getElementById("mostrarKey").innerText = keyFinal;
+            document.getElementById("tempoVenc").innerText = "Vence em: " + dataExp + " às " + horaExp;
+            
+            // Trocar tela
+            document.getElementById("telaInicial").style.display = "none";
+            document.getElementById("telaGerada").style.display = "block";
+
+            // Salvar data
+            localStorage.setItem("ultimaGeracao", hoje);
+
+            // 🔄 REINICIAR TUDO EM 10 SEGUNDOS
+            let contador = 10;
+            const elContador = document.getElementById("contadorReinicio");
+            elContador.style.display = "block";
+            
+            const contaRegressiva = setInterval(() => {
+                contador--;
+                elContador.innerText = "Reiniciando em " + contador + "s...";
+                if(contador <= 0){
+                    clearInterval(contaRegressiva);
+                    reiniciarTudo();
+                }
+            }, 1000);
+        }
+
+        function copiarKey(){
+            let key = document.getElementById("mostrarKey").innerText;
+            navigator.clipboard.writeText(key).then(() => {
+                alert("✅ Key copiada! Cole no seu app.");
+            });
+        }
+
+        // 🔄 FUNÇÃO DE REINÍCIO TOTAL
+        function reiniciarTudo(){
+            // Limpar nada — mantém só a regra de 1/dia
+            // Volta para tela inicial
+            document.getElementById("telaGerada").style.display = "none";
+            document.getElementById("telaInicial").style.display = "block";
+            document.getElementById("contadorReinicio").style.display = "none";
+            
+            // Recarregar a página do zero
+            window.location.replace("gerador.html");
+            // Limpar histórico — não volta pra key antiga
+            history.replaceState(null, "", "gerador.html");
+        }
+    </script>
+</body>
+</html>
